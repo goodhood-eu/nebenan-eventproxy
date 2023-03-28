@@ -33,4 +33,8 @@ node_modules/*
 .DS_Store
 
 # Compiled files
-dist/
+lib/
+
+# Yalc
+.yalc
+yalc.lock

@@ -1,10 +1,16 @@
 {
   "presets": [
+    "@babel/preset-typescript",
     "@babel/preset-env"
   ],
   "plugins": [
-    ["add-module-exports", { "addDefaultProperty": true }],
+    [
+      "add-module-exports",
+      {
+        "addDefaultProperty": true
+      }
+    ],
     "@babel/plugin-transform-strict-mode",
-    "@babel/plugin-proposal-json-strings"
+    "@babel/plugin-transform-runtime"
   ]
 }

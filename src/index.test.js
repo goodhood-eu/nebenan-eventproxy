@@ -27,7 +27,7 @@ describe('eventproxy', () => {
     global.addEventListener = sinon.spy((event, callback) => { handler = callback; });
     global.removeEventListener = sinon.spy();
 
-    eventproxy = proxyquire('../lib/index', {});
+    eventproxy = proxyquire('./index', {});
 
     clock = sinon.useFakeTimers();
   });
@@ -46,7 +46,7 @@ describe('eventproxy', () => {
   it('server safe', () => {
     delete global.window;
     global.document.addEventListener = sinon.spy();
-    const servereventproxy = require('../lib/index');
+    const servereventproxy = require('./index');
     const spy = sinon.spy();
 
     const unsubscribe = servereventproxy('diceroll', spy);

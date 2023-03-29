@@ -1,70 +1,83 @@
 import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 
+interface EventData {
+  listeners: Record<string, HandlerFunction>;
+  lastIndex: number;
+  listenersLength: number;
+}
+
+interface EventSettings {
+  emitter?: Document | Window;
+  wrapper?: (callback: Function) => Function;
+}
+
+type HandlerFunction = Function & { _attachedAt: number, cancel?:Function };
+
 const RESIZE_RATE = 300;
 const SCROLL_RATE = 100;
 const HANDLER_CALL_DELAY = 100;
 
-// ========================================================================================
-// Initialization
-// ========================================================================================
 const isDOMAvailable = typeof window !== 'undefined';
 
-const settingsMap = {};
-const eventMap = {};
+const settingsMap: Record<string, EventSettings> = {};
+const eventMap: Record<string, EventData> = {};
 const noop = () => {};
-const defaultSettings = {};
-
+const defaultSettings: EventSettings = {};
 
 const createEventSettings = () => {
   settingsMap.resize = {
+    // @ts-ignore
     emitter: global,
-    wrapper(callback) { return debounce(callback, RESIZE_RATE); },
+    wrapper(callback) { return debounce(callback as any, RESIZE_RATE); },
   };
 
   settingsMap.scroll = {
+    // @ts-ignore
     emitter: global,
-    wrapper(callback) { return throttle(callback, SCROLL_RATE); },
+    wrapper(callback) { return throttle(callback as any, SCROLL_RATE); },
   };
 
-  // React 17 changed where it attaches it's event listeners.
+  // React 17 changed where it attaches its event listeners.
   // React 16 attached all event listeners to document. React 17 attaches all event
-  // listeners to the react root node.
+  // listeners to the React root node.
   // Given an event handler of type 'click' attaches a global click handler onto
   // document, the click event would bubble up to the newly attached document click
-  // handler (which is, in most cases, an unexpected bahvior). We can prevent this
-  // from attaching specific events to the react root node instead.
+  // handler (which is, in most cases, an unexpected behavior). We can prevent this
+  // from attaching specific events to the React root node instead.
   settingsMap.click = {
+    // @ts-ignore
     emitter: global.document.querySelector('#main') || global.document,
   };
 
+  // @ts-ignore
   defaultSettings.emitter = global.document;
 };
 
 // ========================================================================================
 // Utility functions
 // ========================================================================================
-const getEventData = (event) => {
+const getEventData = (event:string): EventData => {
   if (!eventMap[event]) eventMap[event] = { listeners: {}, lastIndex: 0, listenersLength: 0 };
   return eventMap[event];
 };
 
-const getEventSettings = (event) => settingsMap[event] || defaultSettings;
+const getEventSettings = (event:string): EventSettings => settingsMap[event] || defaultSettings;
 
 // # This is a very dirty fix to a bad problem.
 // When attaching listeners of a given event type DURING the execution of an event handler
 // of this type, it needs to be prevented that the newly attached listener gets called immediately.
 // It is not a trivial task to get some code to execute after all event handlers for a
 // DOM element have been called. Some browser engines schedule tasks differently. Checking
-// for time is the most simple fix to the problem.
+// for time is the simplest fix to the problem.
 //
 // How to prevent: Do not attach event listeners in event handlers.
 // https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
-const isReadyForExecution = (handler) => (
+const isReadyForExecution = (handler: Function & { _attachedAt: number }) => (
   handler && Date.now() - handler._attachedAt > HANDLER_CALL_DELAY
 );
 
-const handleEmitterEvent = (event) => {
+const handleEmitterEvent = (event: Event) => {
   const eventData = getEventData(event.type);
   // Item may have been deleted during iteration cycle
   Object.keys(eventData.listeners).forEach((id) => {
@@ -73,24 +86,28 @@ const handleEmitterEvent = (event) => {
   });
 };
 
-const attachEmitterHandler = (event, eventData, eventSettings) => {
+// see https://github.com/microsoft/TypeScript/issues/32912#issuecomment-522142969
+const opts: AddEventListenerOptions & EventListenerOptions = { passive: true };
+
+const attachEmitterHandler = (event:string, eventData: EventData, eventSettings: EventSettings) => {
   if (eventData.listenersLength === 1) {
-    eventSettings.emitter.addEventListener(event, handleEmitterEvent, { passive: true });
+    eventSettings.emitter?.addEventListener(event, handleEmitterEvent, opts);
   }
 };
 
-const detachEmitterHandler = (event, eventData, eventSettings) => {
+const detachEmitterHandler = (event:string, eventData: EventData, eventSettings: EventSettings) => {
   if (eventData.listenersLength === 0) {
-    eventSettings.emitter.removeEventListener(event, handleEmitterEvent, { passive: true });
+    eventSettings.emitter?.removeEventListener(event, handleEmitterEvent, opts);
   }
 };
 
 // ========================================================================================
 // Public api
 // ========================================================================================
-const removeListener = (event, id) => {
+const removeListener = (event:string, id: number) => {
   const eventData = getEventData(event);
   const eventSettings = getEventSettings(event);
+
   // protect from being called twice
   if (!eventData.listeners[id]) return;
 
@@ -100,14 +117,7 @@ const removeListener = (event, id) => {
   detachEmitterHandler(event, eventData, eventSettings);
 };
 
-/**
- * @function
- * @param {string} event
- * @param {function} callback
- * @return {removeEventListener|noop}
- */
-const addListener = (event, callback) => {
-  if (typeof event !== 'string') throw new Error('Event name required');
+const addListener = (event:string, callback: HandlerFunction) => {
   if (typeof callback !== 'function') throw new Error('Listener function required');
   if (!isDOMAvailable) return noop;
 
@@ -116,7 +126,8 @@ const addListener = (event, callback) => {
 
   eventData.lastIndex += 1;
   const id = eventData.lastIndex;
-  const handler = eventSettings.wrapper ? eventSettings.wrapper(callback) : callback;
+  const handler = eventSettings.wrapper
+    ? eventSettings.wrapper(callback) as HandlerFunction : callback;
   handler._attachedAt = Date.now();
 
   eventData.listeners[id] = handler;

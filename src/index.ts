@@ -46,6 +46,8 @@ const createEventSettings = () => {
   // handler (which is, in most cases, an unexpected behavior). We can prevent this
   // from attaching specific events to the React root node instead.
   settingsMap.click = {
+    // TODO make selector configurable, see
+    // https://github.com/good-hood-gmbh/nebenan-frontend/pull/1899#discussion_r1150820056
     // @ts-ignore
     emitter: global.document.querySelector('#main') || global.document,
   };

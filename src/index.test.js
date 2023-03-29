@@ -27,7 +27,7 @@ describe('eventproxy', () => {
     global.addEventListener = sinon.spy((event, callback) => { handler = callback; });
     global.removeEventListener = sinon.spy();
 
-    eventproxy = proxyquire('../dist/index', {});
+    eventproxy = proxyquire('../lib/index', {});
 
     clock = sinon.useFakeTimers();
   });

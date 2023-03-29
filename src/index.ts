@@ -1,16 +1,18 @@
 import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 
-interface EventData {
+type EventType = keyof GlobalEventHandlersEventMap;
+
+type EventData = {
   listeners: Record<string, HandlerFunction>;
   lastIndex: number;
   listenersLength: number;
-}
+};
 
-interface EventSettings {
+type EventSettings = {
   emitter?: Document | Window;
   wrapper?: (callback: Function) => Function;
-}
+};
 
 type HandlerFunction = Function & { _attachedAt: number, cancel?:Function };
 
@@ -27,14 +29,12 @@ const defaultSettings: EventSettings = {};
 
 const createEventSettings = () => {
   settingsMap.resize = {
-    // @ts-ignore
-    emitter: global,
+    emitter: globalThis,
     wrapper(callback) { return debounce(callback as any, RESIZE_RATE); },
   };
 
   settingsMap.scroll = {
-    // @ts-ignore
-    emitter: global,
+    emitter: globalThis,
     wrapper(callback) { return throttle(callback as any, SCROLL_RATE); },
   };
 
@@ -43,17 +43,16 @@ const createEventSettings = () => {
   // listeners to the React root node.
   // Given an event handler of type 'click' attaches a global click handler onto
   // document, the click event would bubble up to the newly attached document click
-  // handler (which is, in most cases, an unexpected behavior). We can prevent this
+  // handler (which is, in most cases, an unexpected behaviour). We can prevent this
   // from attaching specific events to the React root node instead.
   settingsMap.click = {
     // TODO make selector configurable, see
     // https://github.com/good-hood-gmbh/nebenan-frontend/pull/1899#discussion_r1150820056
     // @ts-ignore
-    emitter: global.document.querySelector('#main') || global.document,
+    emitter: globalThis.document.querySelector('#main') || globalThis.document,
   };
 
-  // @ts-ignore
-  defaultSettings.emitter = global.document;
+  defaultSettings.emitter = globalThis.document;
 };
 
 // ========================================================================================
@@ -75,7 +74,7 @@ const getEventSettings = (event:string): EventSettings => settingsMap[event] || 
 //
 // How to prevent: Do not attach event listeners in event handlers.
 // https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
-const isReadyForExecution = (handler: Function & { _attachedAt: number }) => (
+const isReadyForExecution = (handler: Function & { _attachedAt: number }): boolean => (
   handler && Date.now() - handler._attachedAt > HANDLER_CALL_DELAY
 );
 
@@ -89,24 +88,30 @@ const handleEmitterEvent = (event: Event) => {
 };
 
 // see https://github.com/microsoft/TypeScript/issues/32912#issuecomment-522142969
-const opts: AddEventListenerOptions & EventListenerOptions = { passive: true };
+const DEFAULT_EVENT_OPTIONS: AddEventListenerOptions & EventListenerOptions = { passive: true };
 
-const attachEmitterHandler = (event:string, eventData: EventData, eventSettings: EventSettings) => {
+const attachEmitterHandler = (
+  event:EventType,
+  eventData: EventData,
+  eventSettings: EventSettings) => {
   if (eventData.listenersLength === 1) {
-    eventSettings.emitter?.addEventListener(event, handleEmitterEvent, opts);
+    eventSettings.emitter?.addEventListener(event, handleEmitterEvent, DEFAULT_EVENT_OPTIONS);
   }
 };
 
-const detachEmitterHandler = (event:string, eventData: EventData, eventSettings: EventSettings) => {
+const detachEmitterHandler = (
+  event:EventType,
+  eventData: EventData,
+  eventSettings: EventSettings) => {
   if (eventData.listenersLength === 0) {
-    eventSettings.emitter?.removeEventListener(event, handleEmitterEvent, opts);
+    eventSettings.emitter?.removeEventListener(event, handleEmitterEvent, DEFAULT_EVENT_OPTIONS);
   }
 };
 
 // ========================================================================================
 // Public api
 // ========================================================================================
-const removeListener = (event:string, id: number) => {
+const removeListener = (event:EventType, id: number) => {
   const eventData = getEventData(event);
   const eventSettings = getEventSettings(event);
 
@@ -119,7 +124,7 @@ const removeListener = (event:string, id: number) => {
   detachEmitterHandler(event, eventData, eventSettings);
 };
 
-const addListener = (event:string, callback: HandlerFunction) => {
+const addListener = (event:EventType, callback: HandlerFunction) => {
   if (typeof callback !== 'function') throw new Error('Listener function required');
   if (!isDOMAvailable) return noop;
 

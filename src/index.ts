@@ -10,7 +10,7 @@ type EventData = {
 };
 
 type EventSettings = {
-  emitter?: Document | Window;
+  emitter?: Document | typeof globalThis;
   wrapper?: (callback: Function) => Function;
 };
 

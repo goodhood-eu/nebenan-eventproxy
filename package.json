@@ -1,11 +1,10 @@
 {
   "name": "nebenan-eventproxy",
   "description": "Nebenan eventproxy helper library",
-  "author": "Nebenan.de <info@nebenan.de>",
-  "license": "SEE LICENSE IN LICENSE FILE",
-  "readmeFilename": "README.md",
-  "homepage": "https://nebenan.de/",
-  "repository": "goodhood-eu/nebenan-eventproxy",
+  "author": "Good Hood GmbH <tech@nebenan.de>",
+  "license": "MIT",
+  "homepage": "https://github.com/goodhood-eu/nebenan-eventproxy#readme",
+  "repository": "github:goodhood-eu/nebenan-eventproxy",
   "bugs": "https://github.com/goodhood-eu/nebenan-eventproxy/issues",
   "version": "1.0.0",
   "files": [

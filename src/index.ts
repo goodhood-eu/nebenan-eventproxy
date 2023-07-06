@@ -9,12 +9,14 @@ type EventData = {
   listenersLength: number;
 };
 
+type CallbackFunction = (event:Event) => void;
+
 type EventSettings = {
   emitter?: Document | typeof globalThis;
-  wrapper?: (callback: Function) => Function;
+  wrapper?: (callback: CallbackFunction) => Function;
 };
 
-type HandlerFunction = Function & { _attachedAt: number, cancel?:Function };
+type HandlerFunction = CallbackFunction & { _attachedAt: number, cancel?:Function };
 
 const RESIZE_RATE = 300;
 const SCROLL_RATE = 100;
@@ -30,12 +32,12 @@ const defaultSettings: EventSettings = {};
 const createEventSettings = () => {
   settingsMap.resize = {
     emitter: globalThis,
-    wrapper(callback) { return debounce(callback as any, RESIZE_RATE); },
+    wrapper(callback) { return debounce(callback, RESIZE_RATE); },
   };
 
   settingsMap.scroll = {
     emitter: globalThis,
-    wrapper(callback) { return throttle(callback as any, SCROLL_RATE); },
+    wrapper(callback) { return throttle(callback, SCROLL_RATE); },
   };
 
   // React 17 changed where it attaches its event listeners.

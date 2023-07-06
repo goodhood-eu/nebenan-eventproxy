@@ -1,43 +1,12 @@
 {
+  "extends": "nebenan",
   "overrides": [
     {
       "files": [
-        "**/*.cjs",
-        "**/*.js",
-        "**/*.test.ts"
+        "**/*.test.js"
       ],
       "env": {
         "mocha": true
-      },
-      "rules": {
-        "no-unused-expressions": "off"
-      },
-      "extends": [
-        "nebenan-base",
-        "airbnb-typescript/base"
-      ],
-      "parserOptions": {
-        "project": [
-          "./tsconfig.eslint.json"
-        ]
-      }
-    },
-    {
-      "files": [
-        "**/*.ts",
-        "**/*.tsx"
-      ],
-      "excludedFiles": [
-        "**/*.test.ts"
-      ],
-      "extends": [
-        "nebenan-base",
-        "airbnb-typescript/base"
-      ],
-      "parserOptions": {
-        "project": [
-          "./tsconfig.json"
-        ]
       }
     }
   ]

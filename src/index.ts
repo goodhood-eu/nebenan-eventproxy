@@ -60,12 +60,14 @@ const createEventSettings = () => {
 // ========================================================================================
 // Utility functions
 // ========================================================================================
-const getEventData = (event:string): EventData => {
-  if (!eventMap[event]) eventMap[event] = { listeners: {}, lastIndex: 0, listenersLength: 0 };
-  return eventMap[event];
-};
+function getEventData<TType extends EventType>(eventType:TType): EventData {
+  if (!eventMap[eventType]) eventMap[eventType] = { listeners: {}, lastIndex: 0, listenersLength: 0 };
+  return eventMap[eventType];
+}
 
-const getEventSettings = (event:string): EventSettings => settingsMap[event] || defaultSettings;
+function getEventSettings<TType extends EventType>(eventType:TType): EventSettings {
+  return settingsMap[eventType] || defaultSettings;
+}
 
 // # This is a very dirty fix to a bad problem.
 // When attaching listeners of a given event type DURING the execution of an event handler
@@ -81,7 +83,7 @@ const isReadyForExecution = (handler: Function & { _attachedAt: number }): boole
 );
 
 const handleEmitterEvent = (event: Event) => {
-  const eventData = getEventData(event.type);
+  const eventData = getEventData(event.type as EventType);
   // Item may have been deleted during iteration cycle
   Object.keys(eventData.listeners).forEach((id) => {
     const handler = eventData.listeners[id];
@@ -93,20 +95,20 @@ const handleEmitterEvent = (event: Event) => {
 const DEFAULT_EVENT_OPTIONS: AddEventListenerOptions & EventListenerOptions = { passive: true };
 
 const attachEmitterHandler = (
-  event:EventType,
+  eventType: EventType,
   eventData: EventData,
   eventSettings: EventSettings) => {
   if (eventData.listenersLength === 1) {
-    eventSettings.emitter?.addEventListener(event, handleEmitterEvent, DEFAULT_EVENT_OPTIONS);
+    eventSettings.emitter?.addEventListener(eventType, handleEmitterEvent, DEFAULT_EVENT_OPTIONS);
   }
 };
 
 const detachEmitterHandler = (
-  event:EventType,
+  eventType: EventType,
   eventData: EventData,
   eventSettings: EventSettings) => {
   if (eventData.listenersLength === 0) {
-    eventSettings.emitter?.removeEventListener(event, handleEmitterEvent, DEFAULT_EVENT_OPTIONS);
+    eventSettings.emitter?.removeEventListener(eventType, handleEmitterEvent, DEFAULT_EVENT_OPTIONS);
   }
 };
 

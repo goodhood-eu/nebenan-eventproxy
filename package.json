@@ -6,7 +6,7 @@
   "homepage": "https://github.com/goodhood-eu/nebenan-eventproxy#readme",
   "repository": "github:goodhood-eu/nebenan-eventproxy",
   "bugs": "https://github.com/goodhood-eu/nebenan-eventproxy/issues",
-  "version": "1.1.0-beta.0",
+  "version": "1.1.0-beta.1",
   "files": [
     "lib"
   ],
